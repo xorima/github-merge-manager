@@ -35,6 +35,7 @@ func init() {
 	runCmd.Flags().StringVarP(&config.AppConfig.Author, "author", "a", "kitchen-porter", "The author of the PR, defaults to: `kitchen-porter`")
 	runCmd.Flags().StringVarP(&config.AppConfig.Action, "action", "c", "approve", "The action to take (csv) allowed are: approve,force-merge, defaults to: `approve`")
 	runCmd.Flags().StringVarP(&config.AppConfig.MergeType, "merge-type", "m", "squash", "The type of merge to use if merging, allowed are: squash,merge,rebase, defaults to: `squash`")
+	runCmd.Flags().StringVarP(&config.AppConfig.MergeMsgPrefix, "merge-message-prefix", "p", "", "Any prefix to add to the merge message")
 
 	config.AppConfig.Validate()
 }

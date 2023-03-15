@@ -77,7 +77,7 @@ func (m *Manager) Handle() {
 			panic(err)
 		}
 		prs = append(prs, pr...)
-		m.log.Infof("prs found so far: %d", len(prs))
+		m.log.Infof("scanning repo %s for open PRs, total open PRs found across all scanned repos is %d", repo.GetName(), len(prs))
 
 		for r.NextPage != 0 {
 			opts.Page = r.NextPage
@@ -86,7 +86,7 @@ func (m *Manager) Handle() {
 				panic(err)
 			}
 			prs = append(prs, pr...)
-			m.log.Infof("prs found so far: %d", len(prs))
+			m.log.Infof("scanning repo %s for open PRs, total open PRs found across all scanned repos is %d", repo.GetName(), len(prs))
 
 		}
 	}
@@ -96,7 +96,7 @@ func (m *Manager) Handle() {
 	for _, pr := range prs {
 
 		if pr.GetTitle() == m.cfg.SubjectMatcher {
-			m.log.Infof("Found PR in org %s pr number: %d", pr.GetHead().GetRepo().GetName(), pr.GetNumber())
+			m.log.Infof("Found PR in repository %s pr number: %d", pr.GetHead().GetRepo().GetName(), pr.GetNumber())
 			if slices.Contains(m.cfg.GetAction(), "approve") {
 				if m.cfg.DryRun {
 					m.log.Infof("dry run, skipping approving PR %d", pr.GetNumber())
@@ -128,7 +128,12 @@ func (m *Manager) Handle() {
 					m.log.Infof("dry run, skipping merge PR %d", pr.GetNumber())
 				} else {
 					m.log.Debugf("merging PR %d", pr.GetNumber())
-					res, _, err := m.client.PullRequests.Merge(ctx, m.cfg.OrgName, pr.GetHead().GetRepo().GetName(), pr.GetNumber(), pr.GetBody(), &github.PullRequestOptions{
+					prefix := m.cfg.MergeMsgPrefix
+					if prefix[len(prefix)-1:] != " " {
+						prefix = prefix + " "
+					}
+					cmtMsg := prefix + pr.GetBody()
+					res, _, err := m.client.PullRequests.Merge(ctx, m.cfg.OrgName, pr.GetHead().GetRepo().GetName(), pr.GetNumber(), cmtMsg, &github.PullRequestOptions{
 						CommitTitle: pr.GetTitle(),
 						MergeMethod: m.cfg.MergeType,
 					})

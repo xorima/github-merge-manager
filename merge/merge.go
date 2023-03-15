@@ -2,7 +2,6 @@ package merge
 
 import (
 	"context"
-	"fmt"
 	"github-merge-manager/config"
 	"github.com/google/go-github/v50/github"
 	"github.com/youshy/logger"
@@ -44,6 +43,9 @@ func NewManager(cfg *config.Config) *Manager {
 
 func (m *Manager) Handle() {
 	m.log.Infof("running with options: %+v", m.cfg.GetAction())
+	m.log.Infof("searching for PRs in org %s with title `%s`", m.cfg.OrgName, m.cfg.SubjectMatcher)
+	m.log.Infof("merge method defined as %s", m.cfg.MergeType)
+	m.log.Infof("dryrun is %t", m.cfg.DryRun)
 	var repos []*github.Repository
 	opts := &github.RepositoryListByOrgOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
@@ -93,20 +95,24 @@ func (m *Manager) Handle() {
 	// for each PR, check if it has the given subject
 	for _, pr := range prs {
 
-		pr.GetUser().GetLogin()
-		m.log.Infof("Org raised on: %s", pr.GetHead().GetRepo().GetName())
 		if pr.GetTitle() == m.cfg.SubjectMatcher {
-			m.log.Infof("Found PR %s %d", pr.GetHead().GetRepo().GetName(), pr.GetNumber())
+			m.log.Infof("Found PR in org %s pr number: %d", pr.GetHead().GetRepo().GetName(), pr.GetNumber())
 			if slices.Contains(m.cfg.GetAction(), "approve") {
-				_, _, err := m.client.PullRequests.CreateReview(ctx, m.cfg.OrgName, pr.GetHead().GetRepo().GetName(), pr.GetNumber(), &github.PullRequestReviewRequest{
-					Event: github.String("APPROVE"),
-				})
-				if err != nil {
-					m.log.Errorf("error approving PR %d: %s", pr.GetNumber(), err.Error())
-					m.log.Warnf("skipping any other actions for this pull request %d", pr.GetNumber())
-					continue
+				if m.cfg.DryRun {
+					m.log.Infof("dry run, skipping approving PR %d", pr.GetNumber())
+				} else {
+					m.log.Debugf("approving PR %d", pr.GetNumber())
+					_, _, err := m.client.PullRequests.CreateReview(ctx, m.cfg.OrgName, pr.GetHead().GetRepo().GetName(), pr.GetNumber(), &github.PullRequestReviewRequest{
+						Event: github.String("APPROVE"),
+					})
+					if err != nil {
+						m.log.Errorf("error approving PR %d: %s", pr.GetNumber(), err.Error())
+						m.log.Warnf("skipping any other actions for this pull request %d", pr.GetNumber())
+						continue
+					}
 				}
 			}
+
 			// Does not work, requires changing to the graphql api
 			//if slices.Contains(m.cfg.GetAction(), "enable-auto-merge") {ƒ
 			//	m.client.PullRequests.Edit(ctx, m.cfg.OrgName, pr.GetHead().GetRepo().GetName(), pr.GetNumber(), &github.PullRequest{
@@ -118,17 +124,20 @@ func (m *Manager) Handle() {
 			//	})
 			//}
 			if slices.Contains(m.cfg.GetAction(), "force-merge") {
-				fmt.Println("force merge called")
-				res, _, err := m.client.PullRequests.Merge(ctx, m.cfg.OrgName, pr.GetHead().GetRepo().GetName(), pr.GetNumber(), pr.GetBody(), &github.PullRequestOptions{
-					CommitTitle: pr.GetTitle(),
-					MergeMethod: m.cfg.MergeType,
-				})
-				if err != nil {
-					m.log.Error(err)
+				if m.cfg.DryRun {
+					m.log.Infof("dry run, skipping merge PR %d", pr.GetNumber())
+				} else {
+					m.log.Debugf("merging PR %d", pr.GetNumber())
+					res, _, err := m.client.PullRequests.Merge(ctx, m.cfg.OrgName, pr.GetHead().GetRepo().GetName(), pr.GetNumber(), pr.GetBody(), &github.PullRequestOptions{
+						CommitTitle: pr.GetTitle(),
+						MergeMethod: m.cfg.MergeType,
+					})
+					if err != nil {
+						m.log.Error(err)
+					}
+					m.log.Infof("Merge result: %v", res.GetMessage())
 				}
-				m.log.Infof("Merge result: %v", res.GetMessage())
 			}
-
 		}
 	}
 }

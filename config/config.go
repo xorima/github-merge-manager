@@ -18,6 +18,7 @@ type Config struct {
 	Author         string
 	Action         string
 	MergeType      string
+	MergeMsgPrefix string
 }
 
 func NewConfig() *Config {

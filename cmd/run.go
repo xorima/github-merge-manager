@@ -1,6 +1,3 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -27,7 +24,6 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(runCmd)
 	runCmd.Flags().StringVarP(&config.AppConfig.OrgName, "org-name", "o", "sous-chefs", "The name of the organisation to mark as read, defaults to sous-chefs")
 	runCmd.Flags().StringVarP(&config.AppConfig.SubjectMatcher, "subject-matcher", "s", "Automated PR: Standardising Files", "The PR subject to search for, defaults to: `Automated PR: Standardising Files`")

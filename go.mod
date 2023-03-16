@@ -4,6 +4,8 @@ go 1.20
 
 require (
 	github.com/google/go-github/v50 v50.1.0
+	github.com/shurcooL/githubv4 v0.0.0-20230305132112-efb623903184
+	github.com/shurcooL/graphql v0.0.0-20220606043923-3cf50f8a0a29
 	github.com/spf13/cobra v1.6.1
 	github.com/youshy/logger v0.0.0-20210220181938-8afdac3676e1
 	go.uber.org/zap v1.24.0

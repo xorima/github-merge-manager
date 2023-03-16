@@ -28,7 +28,6 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(runCmd)
-	rootCmd.AddCommand(runCmd)
 	runCmd.Flags().StringVarP(&config.AppConfig.OrgName, "org-name", "o", "sous-chefs", "The name of the organisation to mark as read, defaults to sous-chefs")
 	runCmd.Flags().StringVarP(&config.AppConfig.SubjectMatcher, "subject-matcher", "s", "Automated PR: Standardising Files", "The PR subject to search for, defaults to: `Automated PR: Standardising Files`")
 	runCmd.Flags().BoolVarP(&config.AppConfig.DryRun, "dry-run", "d", false, "Dry run, don't actually mark anything as read")

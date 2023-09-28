@@ -3,12 +3,13 @@ package merge
 import (
 	"context"
 	"github-merge-manager/config"
+	"net/http"
+
 	"github.com/google/go-github/v50/github"
 	"github.com/youshy/logger"
 	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 	"golang.org/x/oauth2"
-	"net/http"
 )
 
 var ctx = context.Background()
@@ -112,24 +113,14 @@ func (m *Manager) Handle() {
 					}
 				}
 			}
-
-			// Does not work, requires changing to the graphql api
-			//if slices.Contains(m.cfg.GetAction(), "enable-auto-merge") {ƒ
-			//	m.client.PullRequests.Edit(ctx, m.cfg.OrgName, pr.GetHead().GetRepo().GetName(), pr.GetNumber(), &github.PullRequest{
-			//		AutoMerge: &github.PullRequestAutoMerge{
-			//			MergeMethod:   github.String("squash"),
-			//			CommitTitle:   github.String(pr.GetTitle()),
-			//			CommitMessage: github.String(pr.GetBody()),
-			//		},
-			//	})
-			//}
 			if slices.Contains(m.cfg.GetAction(), "force-merge") {
 				if m.cfg.DryRun {
 					m.log.Infof("dry run, skipping merge PR %d", pr.GetNumber())
 				} else {
 					m.log.Debugf("merging PR %d", pr.GetNumber())
 					prefix := m.cfg.MergeMsgPrefix
-					if prefix[len(prefix)-1:] != " " {
+
+					if prefix != "" && prefix[len(prefix)-1:] != " " {
 						prefix = prefix + " "
 					}
 					cmtMsg := prefix + pr.GetBody()
